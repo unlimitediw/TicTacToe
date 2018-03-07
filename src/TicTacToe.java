@@ -18,13 +18,13 @@ public class TicTacToe {
         //Key value
         */
         int turn = 1;
-        DisplayBoard.displayBoard(newAI.TTT);
+        DisplayBoard.displayBoard(newAI.TTT,newAI);
         while(turn < 400){
             int x = sc.nextInt();
             int y = sc.nextInt();
             if(newAI.TTT[y][x].chess!= "_") continue;
             newAI.Play(x,y,turn,newAI);
-            turn++;//test
+            turn++;
         }
     }
 }

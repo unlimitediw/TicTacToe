@@ -1,16 +1,39 @@
 import java.lang.Object;
 
 public class DisplayBoard {
-    public static void displayBoard(Point[][] TTT) {
+    public static void displayBoard(Point[][] TTT,AI ai) {
+        int t = 0;
+        int k = 0;
+        System.out.println(ai.evaluationValue);
+        System.out.printf("   ");
+        for(Point x[]:TTT){
+            System.out.printf("%04d",t);
+            System.out.printf(" ");
+            t++;
+        }
+        System.out.println();
         for (Point x[] : TTT) {
+            System.out.printf("%02d",k);
+            System.out.printf(" ");
             for (Point y : x) {
-                double a=y.totalPotential();
-                String str = String.format("%04d",(int)(a));
+                double a = y.totalPotential();
+                String str = "";
+                if(y.chess == "_") {
+                    str = String.format("%04d", (int) (y.AIWeight() - y.MyWeight()));
+                }
+                else if(y.chess == "X"){
+                    str = String.format("%04d", (int) (9999));
+                }
+                else{
+                    str = String.format("%04d", (int) (8888));
+                }
                 System.out.printf(str + " ");
             }
             System.out.println();
+            k++;
         }
         System.out.println();
+
         int i =0;
         int j = 0;
         System.out.printf("   ");

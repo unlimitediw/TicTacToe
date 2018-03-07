@@ -27,6 +27,10 @@ public class AI {
     //Memory maxPotential(a order heap)
     double maxPotential;
 
+    double evaluationValue;
+
+    double[][] evaluationIndi = new double[n][n];
+
     //CalculateSE中的为子系数
     int pointP;
 
@@ -42,6 +46,7 @@ public class AI {
         this.pointP = pointP;
         this.yourChess = yourChess;
         this.opponentChess = opponentChess;
+        this.evaluationValue =0;
         TTTIni(TTT,w,p,b);
     }
 
@@ -92,7 +97,7 @@ public class AI {
             CalculateWeight(optX,optY,0,ai);
             CalculateWeight(optX,optY,1,ai);
             AdjustPotential(optX,optY,ai);
-            DisplayBoard.displayBoard(ai.TTT);
+            DisplayBoard.displayBoard(ai.TTT,ai);
             System.out.println("x: "+optY+" y: " +optX);
         }
             //对手CRRL的SE重置，范围内weight重置
@@ -107,17 +112,20 @@ public class AI {
             CalculateWeight(y, x, 0, ai);
             CalculateWeight(y, x, 1, ai);
             AdjustPotential(y, x, ai);
-            DisplayBoard.displayBoard(ai.TTT);
+            EvaluationFunction(y,x,ai);
+            DisplayBoard.displayBoard(ai.TTT,ai);
             System.out.println();
 
             //己方范围内weight重置
+            System.out.println("TTT");
             FindOptimalXY(ai);
             ai.TTT[optX][optY].chess = "O";
             ResetStartEnd(optX, optY, 1, ai);
             CalculateWeight(optX, optY, 0, ai);
             CalculateWeight(optX, optY, 1, ai);
             AdjustPotential(optX, optY, ai);
-            DisplayBoard.displayBoard(ai.TTT);
+            EvaluationFunction(optX,optY,ai);
+            DisplayBoard.displayBoard(ai.TTT,ai);
             System.out.println("x: " + optY + " y: " + optX);
         }
         //The elements in row[y] reset value, only for start to end
@@ -386,17 +394,17 @@ public class AI {
                 int totalWeight = 0;
                 int weightCount = 0;
                 int newJ;
-                if (sumset > n - 1) newJ = j + sumset - n + 1;
-                else newJ = j;
+                if (sumset > n - 1) newJ = n-1-j;
+                else newJ = sumset-j;
                 while (j <= jEnd) {
                     if (j > i - m && j < i + m) {
                         //计算独立weight值与离散程度
                         if (TTT[newJ][sumset - newJ].chess != "_") {
                             weight += 1;
-                            if (newJ != 0 && sumset - newJ != n-1 && TTT[newJ - 1][sumset-newJ + 1].chess == "_") {
+                            if (newJ != n - 1 && sumset-newJ != 0 && TTT[newJ + 1][sumset-newJ -1].chess == "_") {
                                 disperse++;
                             }
-                            if (newJ != n - 1 && sumset-newJ != 0 && TTT[newJ + 1][sumset-newJ -1].chess == "_") {
+                            if (newJ != 0 && sumset - newJ != n-1 && TTT[newJ - 1][sumset-newJ + 1].chess == "_") {
                                 disperse++;
                             }
                         }
@@ -407,18 +415,18 @@ public class AI {
                         if (j == ai.TTT[newI][sumset - newI].lDStart[type] + m) {
                             obsStart = 0;
                         }
-                        if (j >= jEnd - m && TTT[newJ + jEnd - j][sumset-newJ - (jEnd - j)].chess != "_") {
+                        if (j >= jEnd - m && TTT[newJ -(jEnd - j)][sumset-newJ + (jEnd - j)].chess != "_") {
                             obsEnd = 1;
                         }
                         //计算总体weight值
                         if (weightCount == m) {
                             //达到窗口长度M时剪掉尾巴的disperse和weight
-                            if (TTT[newJ - m][sumset-newJ+m].chess != "_") {
+                            if (TTT[newJ + m][sumset-newJ-m].chess != "_") {
                                 weight -= 1;
-                                if (newJ - m != 0 && sumset-newJ+m!= n-1 && TTT[newJ - m - 1][sumset-newJ+m+1].chess == "_") {
+                                if (newJ + m != n-1 && sumset-newJ-m!= 0 && TTT[newJ + m + 1][sumset-newJ-m-1].chess == "_") {
                                     disperse--;
                                 }
-                                if (TTT[newJ - m + 1][sumset-newJ+m-1].chess == "_") {
+                                if (TTT[newJ + m - 1][sumset-newJ-m+1].chess == "_") {
                                     disperse--;
                                 }
                             }
@@ -430,7 +438,7 @@ public class AI {
                         }
                     }
                     j++;
-                    newJ++;
+                    newJ--;
                 }
                 ai.TTT[newI][sumset - newI].lDWeight[type] = totalWeight;
             }
@@ -553,6 +561,65 @@ public class AI {
                     optY = y;
                 }
             }
+        }
+    }
+
+    void EvaluationFunction(int x,int y,AI ai){
+        //评估函数：E = sigema(totalP(Xi,Yi,0) - totalP(Xi,Yi,1))
+        //只对被影响点进行重置
+        //Row
+        int i = Math.min(ai.TTT[x][y].rowStart[0],ai.TTT[x][y].rowStart[1]);
+        int end = Math.max(ai.TTT[x][y].rowEnd[0],ai.TTT[x][y].rowEnd[1]);
+        while (i <= end) {
+            System.out.println(ai.TTT[x][i].chess);
+            if(ai.TTT[x][i].chess == "_") {
+                ai.evaluationValue -= evaluationIndi[x][i];
+                evaluationIndi[x][i] = (ai.TTT[x][i].AIWeight() - ai.TTT[x][i].MyWeight());
+                ai.evaluationValue += evaluationIndi[x][i];
+            }
+            i++;
+        }
+        //Col
+        i = Math.min(ai.TTT[x][y].colStart[0],ai.TTT[x][y].colStart[1]);
+        end = Math.max(ai.TTT[x][y].colEnd[0],ai.TTT[x][y].colEnd[1]);
+        while (i <= end) {
+            if(ai.TTT[i][y].chess == "_") {
+                ai.evaluationValue -= evaluationIndi[i][y];
+                evaluationIndi[i][y] = (ai.TTT[i][y].AIWeight() - ai.TTT[i][y].MyWeight());
+                ai.evaluationValue += evaluationIndi[i][y];
+            }
+            i++;
+        }
+        //RD
+        i = Math.min(ai.TTT[x][y].rDStart[0],ai.TTT[x][y].rDStart[1]);
+        end = Math.max(ai.TTT[x][y].rDEnd[0],ai.TTT[x][y].rDEnd[1]);
+        int offset = x-y;
+        int newI;
+        if(offset>0) newI = i+offset;
+        else newI = i;
+        while (i <= end) {
+            if(ai.TTT[newI][newI-offset].chess == "_") {
+                ai.evaluationValue -= evaluationIndi[newI][newI-offset];
+                evaluationIndi[newI][newI-offset]= (ai.TTT[newI][newI - offset].AIWeight() - ai.TTT[newI][newI - offset].MyWeight());
+                ai.evaluationValue += evaluationIndi[newI][newI-offset];
+            }
+            i++;
+            newI++;
+        }
+        //LD
+        i = Math.min(ai.TTT[x][y].lDStart[0],ai.TTT[x][y].lDStart[1]);
+        end = Math.max(ai.TTT[x][y].lDEnd[0],ai.TTT[x][y].lDEnd[1]);
+        int sumset = x+y;
+        if(sumset > n-1) newI = n-1-i;
+        else newI = sumset-i;
+        while (i <= end) {
+            if(ai.TTT[newI][sumset-newI].chess == "_") {
+                ai.evaluationValue -= evaluationIndi[newI][sumset - newI];
+                evaluationIndi[newI][sumset - newI] = (ai.TTT[newI][sumset - newI].AIWeight() - ai.TTT[newI][sumset - newI].MyWeight());
+                ai.evaluationValue += evaluationIndi[newI][sumset - newI];
+            }
+            i++;
+            newI--;
         }
     }
 

@@ -82,11 +82,11 @@ public class Point {
     }
 
     double AIWeight(){
-        aiWeight = rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0];
+        aiWeight = rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0]+potentialP[0]*potential[0];
         return aiWeight;
     }
     double MyWeight(){
-        myWeight = rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1];
+        myWeight = rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1]+potentialP[1]*potential[1];
         return myWeight;
     }
 }
