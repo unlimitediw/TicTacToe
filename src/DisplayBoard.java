@@ -4,7 +4,10 @@ public class DisplayBoard {
     public static void displayBoard(Point[][] TTT,AI ai) {
         int t = 0;
         int k = 0;
-        System.out.println(ai.evaluationValue);
+        for(int i = 0;i< ai.optimalLists.size();i++){
+            System.out.println(ai.optimalLists.get(i).pointPotential+" x: "+ ai.optimalLists.get(i).x + " y: " + ai.optimalLists.get(i).y);
+        }
+        System.out.println();
         System.out.printf("   ");
         for(Point x[]:TTT){
             System.out.printf("%04d",t);
@@ -16,16 +19,16 @@ public class DisplayBoard {
             System.out.printf("%02d",k);
             System.out.printf(" ");
             for (Point y : x) {
-                double a = y.totalPotential();
+                double a = y.totalPotential;
                 String str = "";
                 if(y.chess == "_") {
-                    str = String.format("%04d", (int) (y.AIWeight() - y.MyWeight()));
+                    str = String.format("%04d", (int) (y.totalPotential));
                 }
                 else if(y.chess == "X"){
-                    str = String.format("%04d", (int) (9999));
+                    str = String.format("%04d", (int) (0));
                 }
                 else{
-                    str = String.format("%04d", (int) (8888));
+                    str = String.format("%04d", (int) (0));
                 }
                 System.out.printf(str + " ");
             }
