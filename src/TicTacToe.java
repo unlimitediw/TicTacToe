@@ -24,7 +24,7 @@ public class TicTacToe {
             int y = sc.nextInt();
             if(newAI.TTT[y][x].chess!= "_") continue;
             newAI.Play(x,y,turn,newAI);
-            turn++;
+            turn++;//test
         }
     }
 }
