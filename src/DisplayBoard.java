@@ -4,8 +4,9 @@ public class DisplayBoard {
     public static void displayBoard(Point[][] TTT) {
         for (Point x[] : TTT) {
             for (Point y : x) {
-                //String str = String.format("%04d",(int)(y.totalPotential()));
-                //System.out.printf(str + " ");
+                double a=y.totalPotential();
+                String str = String.format("%04d",(int)(a));
+                System.out.printf(str + " ");
             }
             System.out.println();
         }

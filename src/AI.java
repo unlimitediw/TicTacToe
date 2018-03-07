@@ -10,7 +10,7 @@ public class AI {
     String opponentChess;//OpponentChess
 
     //Size of board
-    int n = 8;
+    int n = 20;
 
     //Size of win
     int m = 6;
