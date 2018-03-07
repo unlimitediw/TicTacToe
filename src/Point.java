@@ -29,7 +29,10 @@ public class Point {
     double aiWeight;
     double myWeight;
     String chess;
-    Point(int x,int y,double w,double p, double b,int n, int m){
+
+    double ourWeight;
+    double oppWeight;
+    Point(int x,int y,double w,double p, double b,int n,double ourWeight,double oppWeight){
         totalPotential = 0;
         this.x =x ;
         this.y = y;
@@ -69,24 +72,32 @@ public class Point {
         potentialP[0] = p;
         potentialP[1] = p;
         biasP = b;
+
+        this.ourWeight = ourWeight;
+        this.oppWeight = oppWeight;
         //System.out.println("x: " + y + " y: " + x+ " rDEnd: "+rDEnd[0]);
     }
 
-    double totalPotential(){
-        if(chess=="X") totalPotential = 1;
-        else if(chess =="O") totalPotential =0;
-        else totalPotential = weightP[0]*(rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0])
-                +weightP[1]*0.2*(rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1])
-                +potentialP[0]*potential[0]+potentialP[1]*0.2*potential[1]+biasP*(bias);
+    double totalPotential(int type){
+        if(chess=="X") totalPotential = -999;
+        else if(chess =="O") totalPotential =-999;
+        else{
+            if(type == 0) {
+                totalPotential = ourWeight * AIWeight() + oppWeight * MyWeight() - biasP * bias;
+            }
+            else {
+                totalPotential = oppWeight * AIWeight() + ourWeight * MyWeight() - biasP * bias;
+            }
+        }
         return totalPotential;
     }
 
     double AIWeight(){
-        aiWeight = rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0]+potentialP[0]*potential[0];
+        aiWeight = weightP[0]*(rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0])+potentialP[0]*potential[0];
         return aiWeight;
     }
     double MyWeight(){
-        myWeight = rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1]+potentialP[1]*potential[1];
+        myWeight = weightP[1]*(rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1])+potentialP[1]*potential[1];
         return myWeight;
     }
 }
