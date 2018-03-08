@@ -33,6 +33,8 @@ public class AI {
 
     double evaluationValue;
 
+    double bestValue=-999999999;
+
     double[][] evaluationIndi;
 
     MinMaxState[] minMaxStateArray;
@@ -81,10 +83,9 @@ public class AI {
         }
     }
 
-    void Play(int x, int y, int turn, AI ai) {
+    void Play(int optX, int optY, int turn, AI ai) {
         if (turn % 2 == 1) {
-            FindOptimalXY(ai);
-            FindOptimalXYList(ai);
+            //FindOptimalXY(ai);
             ai.TTT[optX][optY].chess = "X";
             System.out.println("X");
             System.out.println("x: " + optY + " y: " + optX);
@@ -93,11 +94,11 @@ public class AI {
             CalculateWeight(optX, optY, 0, ai);
             AdjustPotential(optX, optY, ai);
             PotentialReset(optX, optY, ai, 0);
+            FindOptimalXYList(ai);
             System.out.println(ai.evaluationValue);
             DisplayBoard.displayBoard(ai.TTT, ai);
         } else {
-            FindOptimalXY(ai);
-            FindOptimalXYList(ai);
+            //FindOptimalXY(ai);
             ai.TTT[optX][optY].chess = "O";
             System.out.println("O");
             System.out.println("x: " + optY + " y: " + optX);
@@ -106,24 +107,62 @@ public class AI {
             CalculateWeight(optX, optY, 1, ai);
             AdjustPotential(optX, optY, ai);
             PotentialReset(optX, optY, ai, 1);
+            FindOptimalXYList(ai);
             System.out.println(ai.evaluationValue);
             DisplayBoard.displayBoard(ai.TTT, ai);
         }
     }
 
-    void MinMax(AI ai,int floor,int count,int x,int y,int turn,MinMaxState[] minMaxStateArray){
+    void PlayMinMax(AI ai,int x,int y,int turn){
+        MinMax(ai,0,x,y,turn,minMaxStateArray);
+    }
+
+    double MinMax(AI ai,int count,int x,int y,int turn,MinMaxState[] minMaxStateArray){
+
         if(count == 0){
             minMaxStateArray = new MinMaxState[floor];
+            for(int i = 0;i<minMaxStateArray.length;i++){
+                minMaxStateArray[i] = new MinMaxState();
+            }
         }
-        int k = count + turn%2;
         AI subAI = ai;
-        subAI.Play(x,y,k%2,subAI);
-        if(count == floor){
+        subAI.Play(x,y,turn,subAI);
+        if(count == floor-1){
+            subAI.EvaluateFunction(subAI);
+            return subAI.evaluationValue;
             //generate evaluate value
         }
-        for(int i = 0; i < subAI.optimalLists.size();i++) {
-            MinMax(ai, floor, count++, ai.optimalLists.get(i).x,ai.optimalLists.get(i).y,turn, minMaxStateArray);
+        else {
+            for (int i = 0; i < subAI.optimalLists.size(); i++) {
+                if(count%2 == 1){
+                    double nextValue = MinMax(subAI,count+1, subAI.optimalLists.get(i).x, subAI.optimalLists.get(i).y, turn+1, minMaxStateArray);
+                    if(nextValue>bestValue) {
+                        bestValue = nextValue;
+                        if (count == 0) {
+                            optX = ai.optimalLists.get(i).x;
+                            optY = ai.optimalLists.get(i).y;
+                        }
+                    }
+                }
+                else{
+                    double nextValue = MinMax(subAI,count+1, subAI.optimalLists.get(i).x, subAI.optimalLists.get(i).y, turn+1, minMaxStateArray);
+                    if(bestValue == -999999999) bestValue = 999999999;
+                    if(nextValue<bestValue) {
+                        bestValue = nextValue;
+                        if (count == 0) {
+                            optX = ai.optimalLists.get(i).x;
+                            optY = ai.optimalLists.get(i).y;
+                        }
+                    }
+                }
+            }
+            if(count == 0){
+                ai.Play(x,y,turn,ai);
+                ai.Play(optX,optY,turn+1,ai);
+                System.out.println("!!!!!!!!!!!!!!!!");
+            }
         }
+        return 0;
     }
 
     //After dropping at (x,y) reset SE value of the points in SE of (x,y)
