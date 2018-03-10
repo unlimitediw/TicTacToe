@@ -18,7 +18,7 @@ import org.json.JSONObject;
 /**
  * PlayHelper is a class help game connect to the server, send team and move information to server, and get the moves information back from server
  * @author Ruotong Wu
- *
+ * @version 1.2.0
  */
 public class PlayHelper {
     private String link="http://www.notexponential.com/aip2pgaming/api/index.php";      //The server URL
@@ -52,6 +52,7 @@ public class PlayHelper {
      */
     public PlayHelper(String teamId1, String teamId2) throws Exception{
        boolean newGame= CreateGame(teamId1,teamId2);
+       teamId=teamId1;
        if(!newGame){
            throw new Exception("Fail to create a new game!");
        }
@@ -64,6 +65,7 @@ public class PlayHelper {
      * @return move id, -1 means fail to make a move
      * @throws Exception HTTP request may fail.
      */
+
     public int MakeMoves(int x, int y) throws Exception {
 
         //parameters
@@ -107,7 +109,7 @@ public class PlayHelper {
             JSONArray jsa=json.getJSONArray("moves");
             for(int i=0;i<jsa.length();i++) {
                 JSONObject js=jsa.getJSONObject(i);
-                Move m=new Move(js.getInt("gameId"),js.getInt("moveId"),js.getInt("teamId"),js.getString("move"));
+                Move m=new Move(js.getInt("teamId"),js.getInt("gameId"),js.getInt("moveId"),js.getString("move"));
                 move.add(m);
             }
         }else {
@@ -153,44 +155,48 @@ public class PlayHelper {
 
         StringBuilder content = new StringBuilder();
         while(content.toString().equals("")) {
-            //setup the connection
-            URL url = new URL(link);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
+            try {
+                //setup the connection
+                URL url = new URL(link);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setDoOutput(true);
 
-            /* setup the parameters */
-            StringJoiner sj;
-            sj = new StringJoiner("&");
-            for (Map.Entry<String, String> entry : parameters.entrySet())
-                sj.add(URLEncoder.encode(entry.getKey(), "UTF-8") + "="
-                        + URLEncoder.encode(entry.getValue(), "UTF-8"));
-            byte[] out = sj.toString().getBytes(StandardCharsets.UTF_8);
-            int length = out.length;
+                /* setup the parameters */
+                StringJoiner sj;
+                sj = new StringJoiner("&");
+                for (Map.Entry<String, String> entry : parameters.entrySet())
+                    sj.add(URLEncoder.encode(entry.getKey(), "UTF-8") + "="
+                            + URLEncoder.encode(entry.getValue(), "UTF-8"));
+                byte[] out = sj.toString().getBytes(StandardCharsets.UTF_8);
+                int length = out.length;
 
-            //setup he header, which contains the api-key and userid
-            con.setFixedLengthStreamingMode(length);
-            con.setRequestProperty("x-api-key", api_key);
-            con.setRequestProperty("userid", userId);
+                //setup he header, which contains the api-key and userid
+                con.setFixedLengthStreamingMode(length);
+                con.setRequestProperty("x-api-key", api_key);
+                con.setRequestProperty("userid", userId);
 
-            //connect to the server
-            con.connect();
+                //connect to the server
+                con.connect();
 
-            //send information to server
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(out);
+                //send information to server
+                try (OutputStream os = con.getOutputStream()) {
+                    os.write(out);
+                }
+
+                //read return information
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+
+                //disconnect from the server
+                con.disconnect();
+            }catch(Exception e){
+                continue;
             }
-
-            //read return information
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-
-            //disconnect from the server
-            con.disconnect();
         }
 
         return content.toString();
@@ -205,23 +211,27 @@ public class PlayHelper {
     private String HttpGET(String link) throws Exception {
         StringBuilder content = new StringBuilder();
         while(content.toString().equals("")) {
-            //setup the connection
-            URL url = new URL(link);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
+            try {
+                //setup the connection
+                URL url = new URL(link);
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("GET");
 
-            //setup the header
-            con.setRequestProperty("x-api-key", api_key);
-            con.setRequestProperty("userid", userId);
+                //setup the header
+                con.setRequestProperty("x-api-key", api_key);
+                con.setRequestProperty("userid", userId);
 
-            //read return information
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+                //read return information
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+            }catch (Exception e){
+                continue;
             }
-            in.close();
         }
 
         return content.toString();

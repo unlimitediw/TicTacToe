@@ -13,6 +13,7 @@ public class Move {
     private int x;          //Represent the row number of the move
     private int y;          //Represent the column number of the move
 
+
     /**
      * return the value of team id as an integer
      * @return team id

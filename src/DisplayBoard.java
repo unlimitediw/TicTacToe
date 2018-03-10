@@ -4,9 +4,12 @@ public class DisplayBoard {
     public static void displayBoard(Point[][] TTT,AI ai) {
         int t = 0;
         int k = 0;
+        /*
         for(int i = 0;i< ai.optimalLists.size();i++){
             System.out.println(ai.optimalLists.get(i).pointPotential+" x: "+ ai.optimalLists.get(i).x + " y: " + ai.optimalLists.get(i).y);
         }
+        */
+
         System.out.println();
         System.out.printf("   ");
         for(Point x[]:TTT){

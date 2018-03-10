@@ -19,8 +19,8 @@ public class Point {
     int[] lDStart = new int[2];
     int[] lDEnd = new int[2];
 
-    double[] weightP = new double[2];//0 means us
-    double[] potentialP = new double[2];
+    double weightP;
+    double potentialP;
     double biasP;
 
     int[] potential = new int[2];
@@ -67,10 +67,8 @@ public class Point {
         lDEnd[1] = lDLenght;
         potential[0] = 0;
         potential[1] = 0;
-        weightP[0] = w;
-        weightP[1] = w;
-        potentialP[0] = p;
-        potentialP[1] = p;
+        weightP = w;
+        potentialP = p;
         biasP = b;
 
         this.ourWeight = ourWeight;
@@ -93,11 +91,11 @@ public class Point {
     }
 
     double AIWeight(){
-        aiWeight = weightP[0]*(rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0])+potentialP[0]*potential[0];
+        aiWeight = weightP*(rowWeight[0]+colWeight[0]+rDWeight[0]+lDWeight[0])+potentialP*potential[0];
         return aiWeight;
     }
     double MyWeight(){
-        myWeight = weightP[1]*(rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1])+potentialP[1]*potential[1];
+        myWeight = weightP*(rowWeight[1]+colWeight[1]+rDWeight[1]+lDWeight[1])+potentialP*potential[1];
         return myWeight;
     }
 }
