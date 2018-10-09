@@ -1,39 +1,41 @@
 import java.lang.Math;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * AI Class:
+ * AI Class is used to memory the environment value
+ * It is mainly used to calculate the point judgement value and evaluation value
+ * And use these to do the MinMax and alpha-beta pruning to find the optimal solution
+ * The characteristic of my AI is that the evaluation and point judgement is quite overall and effective
+ * The domain of our MinMax is correctly minimize
+ */
 public class AI {
-    //Parameters
-    //Initialize chess
-    //String yourChess;//yourChess
-    //String opponentChess;//OpponentChess
 
-    int n;    //Size of board
-    int m;    //Size of win
-    int floor;    //搜索层数
-    double w;    //Weight parameter
-    double p;    //一次迭代下的潜力权重参数 easy potential parameter
-    double b;   //Distance from center parameter
-    double ourWeight;   //己方权重评估
-    double oppWeight;   //对手权重评估
-    double evaluationValue; //全局评估值
-    //double[][] evaluationIndi;
-    double alpha = -999999999;   //alpha prunning
-    double beta = 999999999;   //beta prunning
-    int pointP;    //CalculateSE中的非"_"系数
+    int n;                      //Size of board
+    int m;                      //Size of win
+    int floor;                  //MinMax floor
+    double w;                   //Weight parameter
+    double p;                   //Potential parameter
+    double b;                   //Bias parameter
+    double ourWeight;           //Our total potential parameter
+    double oppWeight;           //Opponent total potential parameter
+    double evaluationValue;     //Evaluation value provided by evaluation functions
+    double alpha = -999999999;  //Alpha pruning
+    double beta = 999999999;    //Beta pruning
+    int pointP;                 //Dropped point parameter
 
-    String chess;
+    String chess;               //Chess type
 
-    //Initialize board;
-    Point[][] TTT;  //存储棋盘TTT中每个点的信息
+    Point[][] TTT;              //Memory information for each point in board
 
-    List<OptimalList> optimalLists = new ArrayList<OptimalList>();
+    //Domain of MinMax neighbour in each turn(the best points in each turn of MinMax)
+    List<OptimalList> optimalLists = new ArrayList<>();
 
-    int optX, optY;
+    int optX, optY;             //Optimal point(optX,optY) base our algorithm
 
+    //PART OF INITIALIZATION
     AI(double w, double p, double b, int pointP, double ourWeight, double oppWeight, int n, int m, int floor) {
-      //  this.chess = chess;
         this.w = w;
         this.p = p;
         this.b = b;
@@ -44,14 +46,12 @@ public class AI {
         this.floor = floor;
         this.pointP = pointP;
         this.evaluationValue = 0;
-        this.optX = n / 2;
-        this.optY = n / 2;
-        //evaluationIndi = new double[n][n];
         TTT = new Point[n][n];
+        //Initialization for board and points
         for (int x = 0; x < TTT.length; x++) {
             for (int y = 0; y < TTT[0].length; y++) {
                 TTT[x][y] = new Point(x, y, w, p, b, n, ourWeight, oppWeight);
-                TTT[x][y].x = x;//Initialize x&y position
+                TTT[x][y].x = x;
                 TTT[x][y].y = y;
                 double center = ((double) n - 1.0) / 2.0;//9.5 when n = 20.
                 TTT[x][y].bias = Math.pow((double) x - center, 2) + Math.pow((double) y - center, 2);//Initialize bias
@@ -59,6 +59,7 @@ public class AI {
         }
     }
 
+    //Initialization for potential of each point in board
     void PotentialIni(AI ai, int type) {
         for (int x = 0; x < TTT.length; x++) {
             for (int y = 0; y < ai.TTT[0].length; y++) {
@@ -69,6 +70,9 @@ public class AI {
         }
     }
 
+
+    //PART OF MAKE MOVE
+    //Play for turn 1 only
     void Play(int optX, int optY, int turn, AI ai) {
         if (turn % 2 == 1) {
             ai.TTT[optX][optY].chess = "X";
@@ -89,22 +93,20 @@ public class AI {
         }
     }
 
-
-
-
-
-
+    //Play for turns larger than 2
     void PlayMinMax(AI ai, int x, int y, int turn) {
         if (turn % 2 == 1) {
-            newMinMax(ai,x,y,ai.floor,ai.alpha,ai.beta,0,true);
+            NewMinMax(ai,x,y,ai.floor,ai.alpha,ai.beta,0,true);
         }
         else {
-            newMinMax(ai,x,y,ai.floor,ai.alpha,ai.beta,1,true);
+            NewMinMax(ai,x,y,ai.floor,ai.alpha,ai.beta,1,true);
         }
         ai.Play(ai.optX,ai.optY,turn,ai);
         DisplayBoard.displayBoard(ai.TTT,ai);
     }
 
+    //SOME FUNCTION USEFUL
+    //Copy AI class
     AI copyAI(AI ai){
         AI subAI = new AI(ai.w, ai.p, ai.b, ai.pointP, ai.ourWeight, ai.oppWeight, ai.n, ai.m, ai.floor);
         for (int k = 0; k < subAI.TTT.length; k++) {
@@ -146,6 +148,8 @@ public class AI {
         return subAI;
     }
 
+    //Check win or not
+    //Check the best or worst situation in MinMax
     boolean CheckPoint(AI ai,int x,int y, String chess,boolean minMaxMode){
         //row
         boolean WIN = false;
@@ -168,7 +172,7 @@ public class AI {
                 WIN =true;
             }
         }
-        //col
+        //column
         memo = 0;
         for(int i =1;i <ai.m;i++){
             if((x+i>= n)||(ai.TTT[x+i][y].chess!=chess)){
@@ -188,7 +192,7 @@ public class AI {
                 WIN =true;
             }
         }
-        //rD
+        //rightDiagonal
         memo = 0;
         int offset = x - y;
         for(int i =1;i <ai.m;i++) {
@@ -222,7 +226,7 @@ public class AI {
                 WIN =true;
             }
         }
-        //lD
+        //leftDiagonal
         memo = 0;
         int sumset = x+y;
         for(int i = 1;i<ai.m;i++){
@@ -272,15 +276,15 @@ public class AI {
             }
         }
         return false;
-        //col
-        //rd
-        //ld
     }
 
-    double newMinMax(AI ai, int x, int y, int floor, double alpha, double beta, int player,boolean firstfloor) {
-        ai.Play(x, y, player, ai);//上回合这回合都是1.上回合是1就是X，那这回合还是1就是O 上回合是0是O那这回合0是X
+    //PART OF MINMAX
+    double NewMinMax(AI ai, int x, int y, int floor, double alpha, double beta, int player,boolean firstfloor) {
+        //Play the opponent's last point
+        ai.Play(x, y, player, ai);
         if(firstfloor){
-            System.out.println("O" + " x: "+x + " y: "+y);
+            if(player == 0) System.out.println("O" + " x: "+x + " y: "+y);
+            else System.out.println("X" + " x: "+x + " y: "+y);
             for(int i = 0;i< n;i++){
                 for(int j = 0;j<n;j++){
                     if(ai.TTT[i][j].chess == "X"){
@@ -304,16 +308,18 @@ public class AI {
                     }
                 }
             }
-        }
-        if(firstfloor) {
             DisplayBoard.displayBoard(ai.TTT, ai);
         }
+
+        //Calculate evaluation value in the leafs of MinMax tree
         if (floor == 0) {
             ai.EvaluateFunction(ai);
-            //System.out.println(ai.evaluationValue);
             return ai.evaluationValue;
         }
-        if (player == 1) {//O回合findMax
+        //Find Max
+        //Renew alpha value
+        //Alpha-beta pruning
+        if (player == 1) {
             double v = -99999999;
             for (int i = 0; i < ai.optimalLists.size(); i++) {
                 AI subAI = copyAI(ai);
@@ -322,7 +328,7 @@ public class AI {
                     g = subAI.evaluationValue;
                 }
                 else {
-                    g = newMinMax(subAI,ai.optimalLists.get(i).x,ai.optimalLists.get(i).y,floor-1,alpha,beta,0,false);
+                    g = NewMinMax(subAI,ai.optimalLists.get(i).x,ai.optimalLists.get(i).y,floor-1,alpha,beta,0,false);
                 }
                 if(firstfloor){
                     if(g>v){
@@ -336,13 +342,15 @@ public class AI {
                 }
                 alpha = Math.max(alpha,v);
                 if(beta < alpha){
-                    //System.out.println(i);
                     break;
                 }
             }
             return v;
         }
-        else{//X回合findMIN
+        //Find Min
+        //Renew beta value
+        //Alpha-beta pruning
+        else{
             double v = 99999999;
             for (int i = 0; i < ai.optimalLists.size(); i++) {
                 AI subAI = copyAI(ai);
@@ -351,7 +359,7 @@ public class AI {
                     g = subAI.evaluationValue;
                 }
                 else{
-                    g = newMinMax(subAI,ai.optimalLists.get(i).x,ai.optimalLists.get(i).y,floor-1,alpha,beta,1,false);
+                    g = NewMinMax(subAI,ai.optimalLists.get(i).x,ai.optimalLists.get(i).y,floor-1,alpha,beta,1,false);
                 }
                 if(firstfloor){
                     if(g<v){
@@ -368,7 +376,13 @@ public class AI {
         }
     }
 
-    //After dropping at (x,y) reset SE value of the points in SE of (x,y)
+    //PART OF POINT JUDGE(PORTION OF EVALUATION FUNCTION)
+    //After dropping at (x,y)
+    //Reset the corresponding start and end value of each point in the row, col, rightDiagonal, leftDiagonal of the origin point(x,y)
+    //E.g. one point in the row of origin point. If the point is on the left of origin point, set the rowEnd value of this point to y-1
+    // _ _ _ _ X_ _ _ _ _ O _ _ _ _ _ X _ _
+    //When your drop a chess on the O position, then to the space left to O, the RowEnd of these point become the point left to "O"
+    //Column, rightDiagonal, leftDiagonal are the same
     void ResetStartEnd(int x, int y, int type, AI ai) {
         //row direction calculate
         int i = ai.TTT[x][y].rowStart[type];
@@ -420,7 +434,25 @@ public class AI {
 
     //calculate new weight of points in line,row,rd,ld of (x,y) after set(x,y)
     //(x,y)will maximum affect 15 points in weight calculation, the close the more. Start and end will cutoff this effect
-    //如果要改动权重重量与棋数关系 两种都要改
+
+    //First part: Calculate the direct weight of each empty space in row, col, rD, lD with the domain of the start and end
+    //Calculate the weight of each empty space on the board
+    //Strategy: _ _ _ _ _ _ _ _ O _ O _ _ _ _ _ _ _
+    //          n 7 6 5 4 3 2 1 0 1 0 1 2 3 4 5 6 7
+    //As shown above
+    //We can feel that the point between the two "O" is close to win
+    //However, the space between 6 and 6 all share the two points if m = 8
+    //Base on it, our algorithm is like a window with length of m, the length will memo the number of same points in the window
+    //Be attention, only the space between start point and end point will be take into consideration as we talk before
+    //Second part: Calculate the situation of block of edge
+    //E.g. X O _ _ _ O _ _
+    //To O, although there are two O in the window, we don't believe that it's weight is high. It is obvious in the example of "X O O O O O O O _ ". Only with one "X", all work of O is out of use.
+    //Third part: Disperse effective
+    //Base on the concept in second part, we can found that even with same "O" the more disperse one is more invincible.
+    //Therefore, I design a check in each empty space, if the right neighbour and left neighbour of it is empty, disperse++
+    //Finally, we use a sub evaluation function to sum up the three variable into one new variable.
+    //Which use the function of WeightReCal() (p.s. You can find at the end of our code)
+    //The weightReCal function return the value that will be changed in Point.RowWeight(Col~,RD~,LD~)
     void CalculateWeight(int x, int y, int type, AI ai) {
         //row calculation
         int i = ai.TTT[x][y].rowStart[type];
@@ -440,8 +472,7 @@ public class AI {
                     int weightCount = 0;
                     while (j <= jEnd) {
                         if (j > i - m && j < i + m) {
-                            //System.out.println("ii: " + i+ " y-m: "+(y-m) + " y: "+y);
-                            //计算独立weight值与离散程度
+                            //Calculate the disperse value
                             if (!TTT[x][j].chess.equals("_")) {
                                 weight += 1;
                                 if (j != 0 && TTT[x][j - 1].chess == "_") {
@@ -451,7 +482,7 @@ public class AI {
                                     disperse++;
                                 }
                             }
-                            //计算开头或结尾与敌方相接的情况
+                            //Judge the situation of edge block
                             if (j == ai.TTT[x][i].rowStart[type] && TTT[x][j].chess != "_") {
                                 obsStart = 1;
                             }
@@ -461,9 +492,9 @@ public class AI {
                             if (j >= jEnd - m && TTT[x][jEnd].chess != "_") {
                                 obsEnd = 1;
                             }
-                            //计算总体weight值
+                            //Calculate the basic weight value and disperse value
                             if (weightCount == m) {
-                                //达到窗口长度M时剪掉尾巴的disperse和weight
+                                //When the window's length is m, omit the end of window and add the head which is like a queue
                                 if (TTT[x][j - m].chess != "_") {
                                     weight -= 1;
                                     if (j - m != 0 && TTT[x][j - m - 1].chess == "_") {
@@ -473,7 +504,7 @@ public class AI {
                                         disperse--;
                                     }
                                 }
-                                //将该窗口的独立weight值加入总体weight值
+                                //Add the windows' weight into the total weight
                                 totalWeight += WeightReCal(weight, obsStart, obsEnd, disperse);
                             } else {
                                 weightCount++;
@@ -503,8 +534,6 @@ public class AI {
                     int weightCount = 0;
                     while (j <= jEnd) {
                         if (j > i - m && j < i + m) {
-                            //计算独立weight值与离散程度
-
                             if (TTT[j][y].chess != "_") {
                                 weight += 1;
                                 if (j != 0 && TTT[j - 1][y].chess == "_") {
@@ -514,7 +543,6 @@ public class AI {
                                     disperse++;
                                 }
                             }
-                            //计算开头或结尾与敌方相接的情况
                             if (j == ai.TTT[i][y].colStart[type] && TTT[j][y].chess != "_") {
                                 obsStart = 1;
                             }
@@ -524,9 +552,7 @@ public class AI {
                             if (j >= jEnd - m && TTT[jEnd][y].chess != "_") {
                                 obsEnd = 1;
                             }
-                            //计算总体weight值
                             if (weightCount == m) {
-                                //达到窗口长度M时剪掉尾巴的disperse和weight
                                 if (TTT[j - m][y].chess != "_") {
                                     weight -= 1;
                                     if (j - m != 0 && TTT[j - m - 1][y].chess == "_") {
@@ -536,7 +562,6 @@ public class AI {
                                         disperse--;
                                     }
                                 }
-                                //将该窗口的独立weight值加入总体weight值
                                 totalWeight += WeightReCal(weight, obsStart, obsEnd, disperse);
                             } else {
                                 weightCount++;
@@ -573,7 +598,6 @@ public class AI {
                     else newJ = j;
                     while (j <= jEnd) {
                         if (j > i - m && j < i + m) {
-                            //计算独立weight值与离散程度
                             if (TTT[newJ][newJ - offset].chess != "_") {
                                 weight += 1;
                                 if (newJ != 0 && newJ - offset != 0 && TTT[newJ - 1][newJ - offset - 1].chess == "_") {
@@ -583,7 +607,6 @@ public class AI {
                                     disperse++;
                                 }
                             }
-                            //计算开头或结尾与敌方相接的情况
                             if (j == ai.TTT[newI][newI - offset].rDStart[type] && TTT[newJ][newJ - offset].chess != "_") {
                                 obsStart = 1;
                             }
@@ -593,9 +616,7 @@ public class AI {
                             if (j >= jEnd - m && TTT[newJ + jEnd - j][newJ - offset + jEnd - j].chess != "_") {
                                 obsEnd = 1;
                             }
-                            //计算总体weight值
                             if (weightCount == m) {
-                                //达到窗口长度M时剪掉尾巴的disperse和weight
                                 if (TTT[newJ - m][newJ - offset - m].chess != "_") {
                                     weight -= 1;
                                     if (newJ - m != 0 && newJ - offset - m != 0 && TTT[newJ - m - 1][newJ - offset - m - 1].chess == "_") {
@@ -605,7 +626,6 @@ public class AI {
                                         disperse--;
                                     }
                                 }
-                                //将该窗口的独立weight值加入总体weight值
                                 totalWeight += WeightReCal(weight, obsStart, obsEnd, disperse);
                             } else {
                                 weightCount++;
@@ -643,7 +663,6 @@ public class AI {
                     else newJ = sumset - j;
                     while (j <= jEnd) {
                         if (j > i - m && j < i + m) {
-                            //计算独立weight值与离散程度
                             if (TTT[newJ][sumset - newJ].chess != "_") {
                                 weight += 1;
                                 if (newJ != n - 1 && sumset - newJ != 0 && TTT[newJ + 1][sumset - newJ - 1].chess == "_") {
@@ -653,7 +672,6 @@ public class AI {
                                     disperse++;
                                 }
                             }
-                            //计算开头或结尾与敌方相接的情况
                             if (j == ai.TTT[newI][sumset - newI].lDStart[type] && TTT[newJ][sumset - newJ].chess != "_") {
                                 obsStart = 1;
                             }
@@ -663,9 +681,7 @@ public class AI {
                             if (j >= jEnd - m && TTT[newJ - (jEnd - j)][sumset - newJ + (jEnd - j)].chess != "_") {
                                 obsEnd = 1;
                             }
-                            //计算总体weight值
                             if (weightCount == m) {
-                                //达到窗口长度M时剪掉尾巴的disperse和weight
                                 if (TTT[newJ + m][sumset - newJ - m].chess != "_") {
                                     weight -= 1;
                                     if (newJ + m != n - 1 && sumset - newJ - m != 0 && TTT[newJ + m + 1][sumset - newJ - m - 1].chess == "_") {
@@ -675,7 +691,6 @@ public class AI {
                                         disperse--;
                                     }
                                 }
-                                //将该窗口的独立weight值加入总体weight值
                                 totalWeight += WeightReCal(weight, obsStart, obsEnd, disperse);
                             } else {
                                 weightCount++;
@@ -694,8 +709,7 @@ public class AI {
 
     }
 
-    //sum of SE
-    //注意这里同时加入了当点为子时的权重增加
+    //Calculate the total distance between start and end of each row, col, rD, lD of a point
     int CalculateStartEnd(int x, int y, int type, AI ai) {
         int sumOfSE = 0;
         if (!ai.TTT[x][y].chess.equals("_")) sumOfSE += pointP;
@@ -706,7 +720,21 @@ public class AI {
         return sumOfSE;
     }
 
-    //calculate new potential of points in line,row,rd,ld of (x,y) after set(x,y)
+    //Potential
+    //What is potential?
+    //Imagine you have a box like this
+    //  _ X _ _
+    //  _ _ _ _
+    //  _ X _ _
+    //  _ _ _ _
+    //The position (0,0) and (3,3) which one do you think is better if you are "O"?
+    //Without the consideration of weight
+    //(3,3) is still better than (3,3)
+    //Because you can find the (0,0) can only develop in the down direction and rightDiagonal direction. Moreover, on this direction, the point (2,1) also restricts the developement of (0,0)
+    //In comparision, (3,3) is much better in potential.
+    //The calculation of potential of one point is in two level
+    //The first level is its row, col, rD, lD which we can get by CalculateStartEnd()
+    //The second level is redo the CalculateStartEnd() on the points in its row, col, rD, lD
     void CalculatePotential(int x, int y, int type, AI ai) {
 
         ai.TTT[x][y].potential[type] = 0;
@@ -745,7 +773,8 @@ public class AI {
         }
     }
 
-    //给(x,y)每行每列每对角线上的点的直接潜力值进行重算，并对他们的总潜力值进行重算。
+    //After getting the function of CalculatePotential()
+    //We also need to reset the corresponding point which is the point in StartEnd domain of row, col, rD, lD of the dropped point
     void AdjustPotential(int x, int y, AI ai) {
         for (int type = 0; type <= 1; type++) {
             int offset = x - y;
@@ -789,23 +818,12 @@ public class AI {
         }
     }
 
-    //找出总潜力值最大的点落子(无minmax下启用)
-    void FindOptimalXY(AI ai) {
-        double totalPotential = -9999999;
-        for (int x = 0; x < n; x++) {
-            for (int y = 0; y < n; y++) {
-                if (ai.TTT[x][y].chess.equals("_")) {
-                    if (ai.TTT[x][y].totalPotential > totalPotential) {
-                        totalPotential = ai.TTT[x][y].totalPotential;
-                        optX = x;
-                        optY = y;
-                    }
-                }
-            }
-        }
-    }
-
-    //找到最大的20个potential点(minmax下启用)
+    //To do the MinMax
+    //We also need to find a good domain in each level to improve the efficiency
+    //Basically, we use the point judge(which is based the part we have introduced before, the weight, potential and bias(too basic) function)
+    //Point.totalPotential is the point judge value
+    //In the future, I will link the size of optimalLists to the remaining empty space in the board
+    //Since this value is really related to the efficiency of our algorithm but also really positive correlation to our accuracy
     void FindOptimalXYList(AI ai) {
         optimalLists = new ArrayList<>();
         OptimalList minOptimal = new OptimalList(-1, -1, -9999999);
@@ -829,20 +847,19 @@ public class AI {
         }
     }
 
+
+    //Reset the totalPotential of Point(base on some Point's value we introduce before)
+    //The evaluation function in Point class: totalPotential = ourWeight * AIWeight() + oppWeight * MyWeight() - biasP * bias;
+    //AIWeight() is used to get the total weight of a point which we get before plus the potential of a point
+    //bias = (X-Xcenter)^2 + (Y-Ycenter)^2
+    //We can believe that bias is useful especially at the beginning of the game
     void PotentialReset(int x, int y, AI ai, int type) {
-        //评估函数：E = sigema(totalP(Xi,Yi,0) - totalP(Xi,Yi,1))
-        //只对被影响点进行重置
-        //ai.evaluationValue -= ai.evaluationIndi[x][y];
         //Row
         int i = Math.min(ai.TTT[x][y].rowStart[0], ai.TTT[x][y].rowStart[1]);
         int end = Math.max(ai.TTT[x][y].rowEnd[0], ai.TTT[x][y].rowEnd[1]);
         while (i <= end) {
             if (ai.TTT[x][i].chess == "_") {
                 ai.TTT[x][i].totalPotential(type);
-                //如果不需要每级评估，请关闭下面三条和函数的第一行
-                //ai.evaluationValue -= ai.evaluationIndi[x][i];
-                //ai.evaluationIndi[x][i] = (ai.TTT[x][i].AIWeight() - ai.TTT[x][i].MyWeight());
-                //ai.evaluationValue += ai.evaluationIndi[x][i];
             }
             i++;
         }
@@ -852,9 +869,6 @@ public class AI {
         while (i <= end) {
             if (ai.TTT[i][y].chess == "_") {
                 ai.TTT[i][y].totalPotential(type);
-                //ai.evaluationValue -= ai.evaluationIndi[i][y];
-                //ai.evaluationIndi[i][y] = (ai.TTT[i][y].AIWeight() - ai.TTT[i][y].MyWeight());
-                //ai.evaluationValue += ai.evaluationIndi[i][y];
             }
             i++;
         }
@@ -868,9 +882,6 @@ public class AI {
         while (i <= end) {
             if (ai.TTT[newI][newI - offset].chess == "_") {
                 ai.TTT[newI][newI - offset].totalPotential(type);
-                //ai.evaluationValue -= ai.evaluationIndi[newI][newI - offset];
-                //ai.evaluationIndi[newI][newI - offset] = (ai.TTT[newI][newI - offset].AIWeight() - ai.TTT[newI][newI - offset].MyWeight());
-                //ai.evaluationValue += ai.evaluationIndi[newI][newI - offset];
             }
             i++;
             newI++;
@@ -884,28 +895,31 @@ public class AI {
         while (i <= end) {
             if (ai.TTT[newI][sumset - newI].chess == "_") {
                 ai.TTT[newI][sumset - newI].totalPotential(type);
-                //ai.evaluationValue -= ai.evaluationIndi[newI][sumset - newI];
-                //ai.evaluationIndi[newI][sumset - newI] = (ai.TTT[newI][sumset - newI].AIWeight() - ai.TTT[newI][sumset - newI].MyWeight());
-                //ai.evaluationValue += ai.evaluationIndi[newI][sumset - newI];
             }
             i++;
             newI--;
         }
     }
 
+    //Now, we have the totalPotential of each point
+    //But how to judge the situation. Is that good or bad?
+    //We can judge it by evaluation value
+    //ai.evaluationValue += ai.TTT[i][j].AIWeight() - ai.TTT[i][j].MyWeight()
+    //AIWeight means "O" power，MyWeigh means "X" power
+    //So evaluationValue = "O" power - "X" power in the whole board(empty space)
+    //Obviously, "O" want to maximize it but "X" want to minimize it
     void EvaluateFunction(AI ai){
         ai.evaluationValue = 0;
         for(int i = 0; i < ai.n; i++){
             for(int j = 0;j<ai.n;j++){
                 if(ai.TTT[i][j].chess.equals("_")){
-                    //AIWeight代表O，MyWeight代表X，所以在O回合eva大，X回合eva小
                     ai.evaluationValue += ai.TTT[i][j].AIWeight() - ai.TTT[i][j].MyWeight();
                 }
             }
         }
     }
 
-
+    //WeightReCal() is use to calculate weight with value of weight, edgeBlock?, disperse
     int WeightReCal(int weight, int obsStart, int obsEnd, int disperse) {
         if(weight == m) return 9999999;
         if (obsEnd == 1 && obsStart == 1 && weight != (m - 1)) return 1;
@@ -922,67 +936,3 @@ public class AI {
     }
 }
 
-/*    double MinMax(AI ai, int count, int x, int y, int turn) {
-
-
-        if(count == 0){
-            minMaxStateArray = new MinMaxState[floor];
-            for(int i = 0;i<minMaxStateArray.length;i++){
-                minMaxStateArray[i] = new MinMaxState();
-            }
-        }
-
-        ai.Play(x, y, turn - 1, ai);
-                if (count == floor - 1) {
-                ai.EvaluateFunction(ai);
-                return ai.evaluationValue;
-                //generate evaluate value
-                } else {
-                if (count % 2 == 1) {
-                for (int i = 0; i < ai.optimalLists.size(); i++) {
-        //Copy AI part
-        AI subAI = copyAI(ai);
-
-        //MINMAX Core algorithm
-        double nextValue = MinMax(subAI, count + 1, subAI.optimalLists.get(i).x, subAI.optimalLists.get(i).y, turn + 1);
-        if (nextValue > bestValue) {
-        bestValue = nextValue;
-        if (count == 0) {
-        optX = ai.optimalLists.get(i).x;
-        optY = ai.optimalLists.get(i).y;
-        }
-        }
-        ai.alpha = Math.max(ai.alpha, nextValue);
-        if (ai.beta <= ai.alpha) break;
-        }
-        } else {
-        for (int i = 0; i < ai.optimalLists.size(); i++) {
-        //Copy AI part
-        AI subAI = copyAI(ai);
-        double nextValue = MinMax(subAI, count + 1, subAI.optimalLists.get(i).x, subAI.optimalLists.get(i).y, turn + 1);
-
-        //MINMAX Core algorithm
-        if (bestValue == -999999990) bestValue = 999999999;
-        if (nextValue < bestValue) {
-        bestValue = nextValue;
-        if (count == 0) {
-        optX = ai.optimalLists.get(i).x;
-        optY = ai.optimalLists.get(i).y;
-        }
-        }
-        ai.beta = Math.min(ai.beta, nextValue);
-        if (ai.beta <= ai.alpha) break;
-        }
-        }
-        }
-        if (count == 0) {
-        ai.Play(optX, optY, turn, ai);
-        System.out.println("optX: " + optX + " optY: " + optY);
-        System.out.println("turn: " + turn);
-        System.out.println("CCCCCC");
-        }
-        return 0;
-        }
-
-
-        */

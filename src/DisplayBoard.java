@@ -1,5 +1,10 @@
 import java.lang.Object;
 
+//It is not meaningful
+//You should not be care about it
+//But it is really helpful to us to test and draw the board
+//If you really want to see the board, use the function DisplayBoard.displayBoard.
+//It works well, I promise.
 public class DisplayBoard {
     public static void displayBoard(Point[][] TTT,AI ai) {
         int t = 0;

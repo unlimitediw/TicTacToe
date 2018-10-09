@@ -25,7 +25,7 @@ public class TicTacToe {
         if(n<13) {
             newAI = new AI(10, 0.1, 1, 15, 0.6, 1.2, n, m, 4);
         }else if(n<16){
-            newAI = new AI(10, 0.07, 1, 15, 1, 1, n, m, 4);
+            newAI = new AI(10, 0.1, 1, 10, 1.2, 0.6, n, m, 4);
         }else{
             newAI = new AI(10, 0.05, 1, 15, 1.5, 0.2, n, m, 4);
         }
@@ -132,8 +132,10 @@ public class TicTacToe {
             //the first step if the user do the first step
             if (turn == 1) {
                 if (userFirst) {
-                    newAI.PlayMinMax(newAI,newAI.n / 2, newAI.n / 2, turn);
+                    newAI.Play(newAI.n / 2, newAI.n / 2, turn,newAI);
                     ph.MakeMoves(newAI.n / 2, newAI.n / 2);
+                    turn++;
+                    DisplayBoard.displayBoard(newAI.TTT,newAI);
                     t = System.currentTimeMillis();
                     System.out.println(df.format(new Date()));
                     continue;
